@@ -1,0 +1,26 @@
+{
+    "manifest_version": 3,
+    "name": "Hello Logger",
+    "version": "1.0.0",
+    "description": "Log hello when a page loads.",
+    "action": {
+        "default_title": "打开唯一页面"
+    },
+    "background": {
+        "service_worker": "background.js"
+    },
+    "permissions": [
+        "tabs"
+    ],
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ]
+}
