@@ -10,7 +10,11 @@
         "service_worker": "background.js"
     },
     "permissions": [
-        "tabs"
+        "tabs",
+        "scripting"
+    ],
+    "host_permissions": [
+        "https://www.google.com/*"
     ],
     "content_scripts": [
         {
