@@ -1,8 +1,12 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import UnoCSS from 'unocss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  base: './', // ensure assets are referenced with relative paths for extensions
-  plugins: [react()],
+  base: './',
+  plugins: [
+    react(),
+    UnoCSS(),
+  ],
 })

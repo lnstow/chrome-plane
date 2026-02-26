@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
-    "name": "Hello Logger",
+    "name": "Plane",
     "version": "1.0.0",
-    "description": "Log hello when a page loads.",
+    "description": "一个聚合页面",
     "action": {
         "default_title": "打开唯一页面"
     },
@@ -11,20 +11,44 @@
     },
     "permissions": [
         "tabs",
-        "scripting"
-    ],
-    "host_permissions": [
-        "https://www.google.com/*"
+        "declarativeNetRequest",
+        "declarativeNetRequestWithHostAccess"
     ],
     "content_scripts": [
         {
             "matches": [
-                "<all_urls>"
+                "*://supjav.com/*",
+                "*://missav.ai/*",
+                "*://asmr.one/*",
+                "*://asmr18.fans/*",
+                "*://japaneseasmr.com/*"
             ],
             "js": [
                 "content.js"
             ],
+            "all_frames": true,
             "run_at": "document_idle"
         }
-    ]
+    ],
+    "host_permissions": [
+        "*://supjav.com/*",
+        "*://missav.ai/*",
+        "*://asmr.one/*",
+        "*://asmr18.fans/*",
+        "*://japaneseasmr.com/*"
+    ],
+    "declarative_net_request": {
+        "rule_resources": [
+            {
+                "id": "ruleset_1",
+                "enabled": true,
+                "path": "rules.json"
+            },
+            {
+                "id": "ruleset_2",
+                "enabled": false,
+                "path": "rules2.json"
+            }
+        ]
+    }
 }

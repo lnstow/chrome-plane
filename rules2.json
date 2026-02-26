@@ -1,0 +1,21 @@
+[
+    {
+        "id": 1,
+        "priority": 1,
+        "action": {
+            "type": "block"
+        },
+        "condition": {
+            "resourceTypes": [
+                "image"
+            ],
+            "initiatorDomains": [
+                "supjav.com",
+                "missav.ai",
+                "asmr.one",
+                "asmr18.fans",
+                "japaneseasmr.com"
+            ]
+        }
+    }
+]
