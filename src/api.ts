@@ -1,4 +1,4 @@
-import type { CardType } from '../model';
+import type { CardType } from './model';
 
 interface RequestContext {
     clear: (data?: CardType[]) => void;
