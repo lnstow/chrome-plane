@@ -35,7 +35,8 @@
         "*://missav.ai/*",
         "*://asmr.one/*",
         "*://asmr18.fans/*",
-        "*://japaneseasmr.com/*"
+        "*://japaneseasmr.com/*",
+        "*://*.weeabo0.xyz/*"
     ],
     "declarative_net_request": {
         "rule_resources": [
