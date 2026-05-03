@@ -14,16 +14,16 @@ export const CardUI: React.FC<CardProps> = ({ data, onClick }) => {
             const itemRoot = (data as CardTypeItem).meta[0];
 
             return itemRoot?.cover ? (
-                <div className="w-full h-40 bg-gray-200 overflow-hidden flex items-center justify-center">
+                <div className="w-full h-44 bg-gray-200 overflow-hidden flex items-center justify-center">
                     <img src={itemRoot.cover} alt="cover" className="object-contain w-full h-full" />
                 </div>
-            ) : <div className="w-full h-40 bg-gray-200" />;
+            ) : <div className="w-full h-44 bg-gray-200" />;
         }
 
         if (data.type === 'list') {
             const listData = data as CardTypeList;
             return (
-                <div className="w-full h-40 bg-gray-100 flex gap-1 p-1 overflow-hidden">
+                <div className="w-full h-44 bg-gray-100 flex gap-1 p-1 overflow-hidden">
                     {listData.previewImgs?.slice(0, 3).map((img, idx) => (
                         <div key={idx} className="flex-1 bg-gray-300 relative border border-white">
                             <img src={img} alt="preview" className="object-contain w-full h-full absolute inset-0" />
@@ -33,7 +33,7 @@ export const CardUI: React.FC<CardProps> = ({ data, onClick }) => {
             );
         }
 
-        return <div className="w-full h-40 bg-gray-100 flex items-center justify-center text-xs text-gray-400">Default</div>;
+        return <div className="w-full h-44 bg-gray-100 flex items-center justify-center text-xs text-gray-400">Default</div>;
     };
 
     // 渲染 Tag

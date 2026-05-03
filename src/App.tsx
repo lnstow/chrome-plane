@@ -2,6 +2,7 @@ import { useEffect, useState, forwardRef, useCallback, useRef } from 'react'
 import { api } from './api'
 import { type CardType } from './model'
 import { CardUI } from './components/Card'
+import { IframeViewer } from './components/IframeViewer'
 import { VirtuosoGrid } from 'react-virtuoso'
 
 const GridContainer = forwardRef<HTMLDivElement, any>(({ style, children, ...props }, ref) => {
@@ -25,6 +26,7 @@ function App() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string>('');
   const [page, setPage] = useState(1);
+  const [viewerUrl, setViewerUrl] = useState<string | null>(null);
   const currentRequestId = useRef(0);
 
   const fetchPageData = async (targetPage: number, append: boolean = false) => {
@@ -72,6 +74,15 @@ function App() {
       }
       return prev;
     });
+  }, []);
+
+  const handleViewCard = useCallback((card: CardType) => {
+    if (card.type === 'item') {
+      const url = (card as any).meta?.[0]?.url;
+      if (url) {
+        setViewerUrl(url);
+      }
+    }
   }, []);
 
   const loadMore = useCallback(() => {
@@ -150,12 +161,19 @@ function App() {
                 List: GridContainer,
               }}
               itemContent={(index, item) => (
-                <CardUI key={`saved_${item.key}_${index}`} data={item} />
+                <CardUI key={`saved_${item.key}_${index}`} data={item} onClick={handleViewCard} />
               )}
             />
           )}
         </div>
       </div>
+      
+      {viewerUrl && (
+        <IframeViewer 
+          url={viewerUrl} 
+          onClose={() => setViewerUrl(null)} 
+        />
+      )}
     </div>
   )
 }
