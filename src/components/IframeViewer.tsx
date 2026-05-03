@@ -4,11 +4,12 @@ import { Rnd } from 'react-rnd';
 interface IframeViewerProps {
   url: string;
   index: number;
+  show: boolean;
   onFocus: () => void;
   onClose: () => void;
 }
 
-export const IframeViewer: React.FC<IframeViewerProps> = ({ url, index, onFocus, onClose }) => {
+export const IframeViewer: React.FC<IframeViewerProps> = ({ url, index, show, onFocus, onClose }) => {
   const SCALE = 0.75; // 在这里可以随意修改这个不规则数字
   const height = 700
 
@@ -24,7 +25,7 @@ export const IframeViewer: React.FC<IframeViewerProps> = ({ url, index, onFocus,
       minHeight={150}
       dragHandleClassName="rnd-drag-handle"
       className="bg-gray-800 border border-gray-600 shadow-2xl rounded-md"
-      style={{ position: 'fixed', display: 'flex', flexDirection: 'column', zIndex: 50 + index }}
+      style={{ position: 'fixed', display: show ? 'flex' : 'none', flexDirection: 'column', zIndex: 50 + index }}
       onMouseDownCapture={onFocus}
     >
       <div className="h-8 bg-gray-900 flex justify-between items-center px-6 cursor-move rnd-drag-handle border-b border-gray-700 rounded-t-md">

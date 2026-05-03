@@ -3,10 +3,11 @@ import type { CardType, CardTypeItem, CardTypeList } from '../model';
 
 interface CardProps {
     data: CardType;
+    order?: number;
     onClick?: (data: CardType) => void;
 }
 
-export const CardUI: React.FC<CardProps> = ({ data, onClick }) => {
+export const CardUI: React.FC<CardProps> = ({ data, order, onClick }) => {
 
     // 根据类型渲染图片区域
     const renderCover = () => {
@@ -54,7 +55,7 @@ export const CardUI: React.FC<CardProps> = ({ data, onClick }) => {
 
     return (
         <div
-            className="flex flex-col border border-gray-700 rounded-md overflow-hidden bg-gray-800 cursor-pointer hover:border-gray-500 transition-colors shadow-sm"
+            className="flex flex-col border border-gray-700 rounded-md overflow-hidden bg-gray-800 cursor-pointer hover:border-gray-500 transition-colors shadow-sm relative"
             onClick={() => onClick?.(data)}
         >
             {renderCover()}
@@ -64,6 +65,11 @@ export const CardUI: React.FC<CardProps> = ({ data, onClick }) => {
                 </div>
                 {renderTags()}
             </div>
+            {order !== undefined && (
+                <div className="absolute bottom-2 right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow-md z-10">
+                    {order}
+                </div>
+            )}
         </div>
     );
 };

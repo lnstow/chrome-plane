@@ -22,3 +22,11 @@ export interface CardTypeList extends CardType {
     type: 'list'
     previewImgs: string[] // 预览图数组
 }
+
+export function cardTypeIsItem(card: CardType): card is CardTypeItem {
+    return card.type === 'item';
+}
+
+export function cardTypeIsList(card: CardType): card is CardTypeList {
+    return card.type === 'list';
+}

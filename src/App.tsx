@@ -1,6 +1,6 @@
 import { useEffect, useState, forwardRef, useCallback, useRef } from 'react'
 import { api } from './api'
-import { type CardType } from './model'
+import { cardTypeIsItem, type CardType } from './model'
 import { CardUI } from './components/Card'
 import { IframeViewer } from './components/IframeViewer'
 import { VirtuosoGrid } from 'react-virtuoso'
@@ -26,7 +26,7 @@ function App() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string>('');
   const [page, setPage] = useState(1);
-  const [viewers, setViewers] = useState<{url: string, order: number}[]>([]);
+  const [viewers, setViewers] = useState<{ url: string, order: number, show: boolean, key: string }[]>([]);
   const viewerOrderCounter = useRef(0);
   const currentRequestId = useRef(0);
 
@@ -78,29 +78,27 @@ function App() {
   }, []);
 
   const handleViewCard = useCallback((card: CardType) => {
-    if (card.type === 'item') {
-      const url = (card as any).meta?.[0]?.url;
-      if (url) {
-        viewerOrderCounter.current += 1;
-        const currentOrder = viewerOrderCounter.current;
-        setViewers(prev => {
-          const existing = prev.find(v => v.url === url);
-          if (existing) {
-            return prev.map(v => v.url === url ? { ...v, order: currentOrder } : v);
-          }
+    if (cardTypeIsItem(card)) {
+      const url = card.meta[0].url;
+      viewerOrderCounter.current += 1;
+      const currentOrder = viewerOrderCounter.current;
+      setViewers(prev => {
+        const existing = prev.find(v => v.url === url);
+        if (existing) {
+          return prev.map(v => v.url === url ? { ...v, order: currentOrder, show: true } : v);
+        }
 
-          const next = [...prev];
-          if (next.length >= 10) {
-            let minIndex = 0;
-            for (let i = 1; i < next.length; i++) {
-              if (next[i].order < next[minIndex].order) minIndex = i;
-            }
-            next.splice(minIndex, 1);
+        const next = [...prev];
+        if (next.length >= 10) {
+          let minIndex = 0;
+          for (let i = 1; i < next.length; i++) {
+            if (next[i].order < next[minIndex].order) minIndex = i;
           }
-          next.push({ url, order: currentOrder });
-          return next;
-        });
-      }
+          next.splice(minIndex, 1);
+        }
+        next.push({ url, order: currentOrder, show: true, key: card.key });
+        return next;
+      });
     }
   }, []);
 
@@ -154,9 +152,12 @@ function App() {
                 </div>
               )
             }}
-            itemContent={(index, item) => (
-              <CardUI key={`${item.key}_${index}`} data={item} onClick={handleSelectCard} />
-            )}
+            itemContent={(index, item) => {
+              const viewer = viewers.find(v => v.key === item.key);
+              return (
+                <CardUI key={`${item.key}_${index}`} data={item} order={viewer?.order} onClick={handleSelectCard} />
+              )
+            }}
           />
         </div>
 
@@ -185,9 +186,12 @@ function App() {
               components={{
                 List: GridContainer,
               }}
-              itemContent={(index, item) => (
-                <CardUI key={`saved_${item.key}_${index}`} data={item} onClick={handleViewCard} />
-              )}
+              itemContent={(index, item) => {
+                const viewer = viewers.find(v => v.key === item.key);
+                return (
+                  <CardUI key={`${item.key}_${index}`} data={item} order={viewer?.order} onClick={handleViewCard} />
+                )
+              }}
             />
           )}
         </div>
@@ -198,8 +202,9 @@ function App() {
           key={v.url}
           url={v.url}
           index={v.order}
+          show={v.show}
           onFocus={() => handleFocusIframe(v.url)}
-          onClose={() => setViewers(prev => prev.filter(u => u.url !== v.url))}
+          onClose={() => setViewers(prev => prev.map(u => u.url === v.url ? { ...u, show: false } : u))}
         />
       ))}
     </div>
