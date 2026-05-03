@@ -1,4 +1,4 @@
-import { useEffect, useState, forwardRef, useCallback } from 'react'
+import { useEffect, useState, forwardRef, useCallback, useRef } from 'react'
 import { api } from './api'
 import { type CardType } from './model'
 import { CardUI } from './components/Card'
@@ -25,10 +25,18 @@ function App() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string>('');
   const [page, setPage] = useState(1);
+  const currentRequestId = useRef(0);
 
   const fetchPageData = async (targetPage: number, append: boolean = false) => {
-    if (append) setLoadingMore(true);
-    else setLoading(true);
+    const requestId = ++currentRequestId.current;
+
+    if (append) {
+      setLoadingMore(true);
+      setLoading(false); // 清除可能卡住的全局 loading 状态
+    } else {
+      setLoading(true);
+      setLoadingMore(false); // 清除可能卡住的 loadingMore 状态
+    }
     setError('');
 
     try {
@@ -36,13 +44,19 @@ function App() {
         ? 'https://japaneseasmr.com'
         : `https://japaneseasmr.com/page/${targetPage}/`;
       const data = await api.getList(url);
+
+      if (requestId !== currentRequestId.current) return;
+
       setItems(prev => append ? [...prev, ...data] : data);
       setPage(targetPage);
     } catch (err: any) {
+      if (requestId !== currentRequestId.current) return;
       setError(err.message || '获取数据失败');
     } finally {
-      if (append) setLoadingMore(false);
-      else setLoading(false);
+      if (requestId === currentRequestId.current) {
+        if (append) setLoadingMore(false);
+        else setLoading(false);
+      }
     }
   };
 
@@ -52,7 +66,6 @@ function App() {
   }, []);
 
   const handleSelectCard = useCallback((card: CardType) => {
-    // 避免重复添加
     setSavedItems(prev => {
       if (!prev.find(item => item.key === card.key)) {
         return [card, ...prev];
@@ -62,10 +75,11 @@ function App() {
   }, []);
 
   const loadMore = useCallback(() => {
-    if (!loading && !loadingMore && !error && items.length > 0) {
+    // 即使有 error，只要用户继续滚动或重试，也允许重新触发
+    if (!loading && !loadingMore && items.length > 0) {
       fetchPageData(page + 1, true);
     }
-  }, [loading, loadingMore, error, items.length, page]);
+  }, [loading, loadingMore, items.length, page]);
 
   const handleJumpPage = () => {
     const input = prompt('请输入要跳转的页码:', String(page));
@@ -98,7 +112,10 @@ function App() {
             components={{
               List: GridContainer,
               Footer: () => (
-                loadingMore ? <div className="text-center py-4 text-gray-400 w-full col-span-3">正在加载下一页...</div> : null
+                <div className="w-full col-span-3 pb-4">
+                  {loadingMore && <div className="text-center text-gray-400">正在加载下一页...</div>}
+                  {error && items.length > 0 && <div className="text-center text-red-400 cursor-pointer" onClick={loadMore}>加载失败，点击重试: {error}</div>}
+                </div>
               )
             }}
             itemContent={(index, item) => (
