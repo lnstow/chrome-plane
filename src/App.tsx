@@ -26,7 +26,8 @@ function App() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string>('');
   const [page, setPage] = useState(1);
-  const [viewerUrl, setViewerUrl] = useState<string | null>(null);
+  const [viewers, setViewers] = useState<{url: string, order: number}[]>([]);
+  const viewerOrderCounter = useRef(0);
   const currentRequestId = useRef(0);
 
   const fetchPageData = async (targetPage: number, append: boolean = false) => {
@@ -80,7 +81,25 @@ function App() {
     if (card.type === 'item') {
       const url = (card as any).meta?.[0]?.url;
       if (url) {
-        setViewerUrl(url);
+        viewerOrderCounter.current += 1;
+        const currentOrder = viewerOrderCounter.current;
+        setViewers(prev => {
+          const existing = prev.find(v => v.url === url);
+          if (existing) {
+            return prev.map(v => v.url === url ? { ...v, order: currentOrder } : v);
+          }
+
+          const next = [...prev];
+          if (next.length >= 10) {
+            let minIndex = 0;
+            for (let i = 1; i < next.length; i++) {
+              if (next[i].order < next[minIndex].order) minIndex = i;
+            }
+            next.splice(minIndex, 1);
+          }
+          next.push({ url, order: currentOrder });
+          return next;
+        });
       }
     }
   }, []);
@@ -91,6 +110,12 @@ function App() {
       fetchPageData(page + 1, true);
     }
   }, [loading, loadingMore, items.length, page]);
+
+  const handleFocusIframe = useCallback((url: string) => {
+    viewerOrderCounter.current += 1;
+    const currentOrder = viewerOrderCounter.current;
+    setViewers(prev => prev.map(v => v.url === url ? { ...v, order: currentOrder } : v));
+  }, []);
 
   const handleJumpPage = () => {
     const input = prompt('请输入要跳转的页码:', String(page));
@@ -167,13 +192,16 @@ function App() {
           )}
         </div>
       </div>
-      
-      {viewerUrl && (
-        <IframeViewer 
-          url={viewerUrl} 
-          onClose={() => setViewerUrl(null)} 
+
+      {viewers.map((v) => (
+        <IframeViewer
+          key={v.url}
+          url={v.url}
+          index={v.order}
+          onFocus={() => handleFocusIframe(v.url)}
+          onClose={() => setViewers(prev => prev.filter(u => u.url !== v.url))}
         />
-      )}
+      ))}
     </div>
   )
 }
