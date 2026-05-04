@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Rnd } from 'react-rnd';
 
 interface IframeViewerProps {
@@ -12,6 +12,20 @@ interface IframeViewerProps {
 export const IframeViewer: React.FC<IframeViewerProps> = ({ url, index, show, onFocus, onClose }) => {
   const SCALE = 0.75; // 在这里可以随意修改这个不规则数字
   const height = 700
+  const [isInteracting, setIsInteracting] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    const handleBlur = () => {
+      setTimeout(() => {
+        if (document.activeElement === iframeRef.current) {
+          onFocus();
+        }
+      }, 0);
+    };
+    window.addEventListener('blur', handleBlur);
+    return () => window.removeEventListener('blur', handleBlur);
+  }, [onFocus]);
 
   return (
     <Rnd
@@ -27,6 +41,10 @@ export const IframeViewer: React.FC<IframeViewerProps> = ({ url, index, show, on
       className="bg-gray-800 border border-gray-600 shadow-2xl rounded-md"
       style={{ position: 'fixed', display: show ? 'flex' : 'none', flexDirection: 'column', zIndex: 50 + index }}
       onMouseDownCapture={onFocus}
+      onDragStart={() => setIsInteracting(true)}
+      onDragStop={() => setIsInteracting(false)}
+      onResizeStart={() => setIsInteracting(true)}
+      onResizeStop={() => setIsInteracting(false)}
     >
       <div className="h-8 bg-gray-900 flex justify-between items-center px-6 cursor-move rnd-drag-handle border-b border-gray-700 rounded-t-md">
         <span
@@ -43,14 +61,16 @@ export const IframeViewer: React.FC<IframeViewerProps> = ({ url, index, show, on
           ✕
         </button>
       </div>
-      <div className="flex-1 relative overflow-hidden bg-white rounded-b-md">
+      <div className="flex-1 relative overflow-hidden bg-gray-950 rounded-b-md">
         <iframe
+          ref={iframeRef}
           src={url}
           className="absolute top-0 left-0 border-none origin-top-left"
           style={{
             transform: `scale(${SCALE})`,
             width: `${(1 / SCALE) * 100}%`,
             height: `${(1 / SCALE) * 100}%`,
+            pointerEvents: isInteracting ? 'none' : 'auto',
           }}
           sandbox="allow-scripts allow-same-origin allow-forms"
           referrerPolicy="no-referrer"
