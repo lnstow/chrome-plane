@@ -1,4 +1,4 @@
-if (window.self !== window.top || true) {
+if (window.self !== window.top) {
     // 解析当前页面内容，并发送给上层 Window（我们的扩展主页）
     const parsePageAndReport = () => {
         // TODO: 根据不同站点的 DOM 结构提取并组装 Card 数据
@@ -32,6 +32,20 @@ if (window.self !== window.top || true) {
 
         let data = fakeData;
         if (location.hostname === 'japaneseasmr.com') {
+            if (document.querySelector(".fotorama__img") != null) {
+                // 详情页面
+                document.addEventListener('click', function (event) {
+                    // 判断被点击的元素是否匹配你的目标
+                    if (event.target && event.target.matches('a')) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        event.stopImmediatePropagation();
+
+                        console.log('拦截到了动态生成的按钮点击！');
+                    }
+                }, true); // 同样使用捕获阶段
+                return
+            }
             const list = document.querySelectorAll("div.entry-preview-wrapper.clearfix");
             data = []
             list.forEach(item => {
@@ -90,6 +104,20 @@ if (window.self !== window.top || true) {
 
     // 握手：立即向主框架报告说本 script 已经准备好可以接受指令了
     window.addEventListener('load', () => {
+        if (document.title == "Just a moment..." || document.title == "请稍候…") {
+            window.top.postMessage({
+                type: 'PLANE_IFRAME_CLOUDFLARE'
+            }, '*');
+            const timer = setInterval(() => {
+                if (document.title != "Just a moment..." && document.title != "请稍候…") {
+                    window.top.postMessage({
+                        type: 'PLANE_IFRAME_READY'
+                    }, '*');
+                    clearInterval(timer);
+                }
+            }, 1000);
+            return
+        }
         window.top.postMessage({
             type: 'PLANE_IFRAME_READY'
         }, '*');

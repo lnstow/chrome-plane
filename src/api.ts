@@ -9,6 +9,14 @@ const pendingRequests = new Map<HTMLIFrameElement, RequestContext>();
 
 export const api = {
     init: () => {
+        const findIframe = (event: MessageEvent) => {
+            for (const kv of pendingRequests) {
+                if (kv[0].contentWindow === event.source) {
+                    return kv
+                }
+            }
+            return null
+        }
         // 共享的全局监听器
         window.addEventListener('message', (event: MessageEvent) => {
             if (!event.data) return;
@@ -16,7 +24,14 @@ export const api = {
             const data = event.data.data;
             console.log("host recv", type)
 
-            // 1. 收到 iframe 中 content.js 准备就绪的握手通知
+            // 需要显示iframe页面，等待用户通过验证
+            if (type === 'PLANE_IFRAME_CLOUDFLARE') {
+                const kv = findIframe(event)
+                if (kv) kv[0].style.top = "0px"
+                return
+            }
+
+            // 收到 iframe 中 content.js 准备就绪的握手通知
             if (type === 'PLANE_IFRAME_READY') {
 
                 // 通过发送方 event.source 发出事件
@@ -26,15 +41,11 @@ export const api = {
                 return;
             }
 
-            // 2. 收到解析数据
+            // 收到解析数据
             if (type === 'PLANE_DATA_RESULT') {
-                for (const [iframe, ctx] of pendingRequests) {
-                    if (iframe.contentWindow === event.source) {
-                        ctx.clear(data);
-                        break;
-                    }
-                }
-                return;
+                const kv = findIframe(event)
+                if (kv) kv[1].clear(data)
+                return
             }
         });
     },

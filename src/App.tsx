@@ -26,6 +26,7 @@ function App() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string>('');
   const [page, setPage] = useState(1);
+  const [exploreGridKey, setExploreGridKey] = useState(0);
   const [viewers, setViewers] = useState<{ url: string, order: number, show: boolean, key: string }[]>([]);
   const viewerOrderCounter = useRef(0);
   const currentRequestId = useRef(0);
@@ -52,6 +53,7 @@ function App() {
 
       setItems(prev => append ? [...prev, ...data] : data);
       setPage(targetPage);
+      if (!append) setExploreGridKey(prev => prev + 1);
     } catch (err: any) {
       if (requestId !== currentRequestId.current) return;
       setError(err.message || '获取数据失败');
@@ -140,6 +142,7 @@ function App() {
           )}
 
           <VirtuosoGrid
+            key={exploreGridKey}
             style={{ height: '100%' }}
             data={items}
             endReached={loadMore}
