@@ -77,7 +77,7 @@ export const api = {
                 if (data) resolve(data);
                 else reject(new Error(`Timeout fetching data from ${url}`));
             }
-            timeout = setTimeout(() => { clear(); }, 17000);
+            timeout = setTimeout(() => { clear(); }, 22000);
 
             // 加入全局请求管理池
             pendingRequests.set(iframe, {

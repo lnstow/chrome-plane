@@ -19,7 +19,18 @@ const GridContainer = forwardRef<HTMLDivElement, any>(({ style, children, ...pro
 });
 GridContainer.displayName = 'GridContainer';
 
+interface TabInfo {
+  id: string;
+  title: string;
+  url: string;
+  closable: boolean;
+}
+
 function App() {
+  const [tabs, setTabs] = useState<TabInfo[]>([
+    { id: 'japaneseasmr', title: 'JapaneseASMR', url: 'https://japaneseasmr.com', closable: false }
+  ]);
+  const [activeTabId, setActiveTabId] = useState<string>('japaneseasmr');
   const [items, setItems] = useState<CardType[]>([]);
   const [savedItems, setSavedItems] = useState<CardType[]>([]);
   const [loading, setLoading] = useState(false);
@@ -31,8 +42,9 @@ function App() {
   const viewerOrderCounter = useRef(0);
   const currentRequestId = useRef(0);
 
-  const fetchPageData = async (targetPage: number, append: boolean = false) => {
+  const fetchPageData = async (targetPage: number, append: boolean = false, currentTabIdOverride?: string) => {
     const requestId = ++currentRequestId.current;
+    const currentTabId = currentTabIdOverride || activeTabId;
 
     if (append) {
       setLoadingMore(true);
@@ -43,10 +55,18 @@ function App() {
     }
     setError('');
 
+    const activeTab = tabs.find(t => t.id === currentTabId);
+    if (!activeTab) return;
+
     try {
+      let baseUrl = activeTab.url;
+      if (baseUrl.endsWith('/')) {
+        baseUrl = baseUrl.slice(0, -1);
+      }
       const url = targetPage === 1
-        ? 'https://japaneseasmr.com'
-        : `https://japaneseasmr.com/page/${targetPage}/`;
+        ? activeTab.url
+        : `${baseUrl}/page/${targetPage}/`;
+      
       const data = await api.getList(url);
 
       if (requestId !== currentRequestId.current) return;
@@ -67,7 +87,43 @@ function App() {
 
   useEffect(() => {
     api.init();
-    fetchPageData(1);
+  }, []);
+
+  useEffect(() => {
+    setItems([]);
+    setPage(1);
+    setError('');
+    fetchPageData(1, false, activeTabId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTabId]);
+
+  const handleCloseTab = useCallback((id: string) => {
+    setTabs(prev => {
+      const next = prev.filter(t => t.id !== id);
+      setActiveTabId(currentActive => {
+        if (currentActive === id && next.length > 0) {
+          return next[next.length - 1].id;
+        }
+        return currentActive;
+      });
+      return next;
+    });
+  }, []);
+
+  const handleAddTab = useCallback(() => {
+    const url = prompt('请输入网站链接 (URL):', 'https://');
+    if (!url) return;
+    const title = prompt('请输入标签标题:', 'New Tab');
+    if (!title) return;
+
+    const newTab: TabInfo = {
+      id: Date.now().toString(),
+      title,
+      url,
+      closable: true
+    };
+    setTabs(prev => [...prev, newTab]);
+    setActiveTabId(newTab.id);
   }, []);
 
   const handleSelectCard = useCallback((card: CardType) => {
@@ -131,8 +187,37 @@ function App() {
     <div className="flex h-screen w-screen bg-gray-900 text-gray-200 overflow-hidden text-sm">
       {/* 左侧列表 */}
       <div className="w-1/2 flex flex-col border-r border-gray-700 relative">
-        <div className="p-3 border-b border-gray-700 font-bold tracking-wider">
-          探索 (Explore)
+        {/* Tab 栏 */}
+        <div className="flex border-b border-gray-700 overflow-x-auto bg-gray-800 shrink-0" style={{ scrollbarWidth: 'none' }}>
+          {tabs.map(tab => (
+            <div
+              key={tab.id}
+              onClick={() => setActiveTabId(tab.id)}
+              className={`group flex items-center px-4 py-2 cursor-pointer border-r border-gray-700 min-w-max text-sm select-none transition-colors ${
+                activeTabId === tab.id ? 'bg-gray-700 text-white font-bold' : 'text-gray-400 hover:bg-gray-700/50 hover:text-gray-200'
+              }`}
+            >
+              <span>{tab.title}</span>
+              {tab.closable && (
+                <span
+                  className="ml-2 w-4 h-4 flex items-center justify-center rounded hover:bg-gray-500 text-gray-400 hover:text-white transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCloseTab(tab.id);
+                  }}
+                >
+                  ×
+                </span>
+              )}
+            </div>
+          ))}
+          <div
+            onClick={handleAddTab}
+            className="flex items-center justify-center px-4 py-2 cursor-pointer text-gray-400 hover:bg-gray-700/50 hover:text-white border-r border-gray-700 select-none transition-colors font-bold text-lg"
+            title="添加新标签"
+          >
+            +
+          </div>
         </div>
         <div className="flex-1 p-4 relative">
           {loading && items.length === 0 && <div className="text-gray-400 absolute inset-0 flex items-center justify-center">加载中... (正在后台打开页面解析)</div>}

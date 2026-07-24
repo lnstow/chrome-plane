@@ -17,7 +17,7 @@ bun+vite+react+unocss
 
 ## 4. 关键业务逻辑 (Core Business Logic)
 1. 用户打开扩展主页，左右半屏展示两个列表
-2. 扩展中实现一个微型后端Api.js，左列表调用 api.getList('https://japaneseasmr.com') 获取数据
+2. 扩展中实现一个微型后端api.ts，左列表调用 api.getList('https://japaneseasmr.com') 获取数据
 3. api 的实现逻辑是 用iframe打开目标网页，然后contentjs会注入目标网页，解析网页数据并通过 window.postMessage 与 api通信
 4. api 返回解析结果给ui展示，展示为 Card 列表，每行大约3个Card
 5. 用户点击Card，将Card添加到右列表
