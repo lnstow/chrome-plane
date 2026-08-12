@@ -33,10 +33,21 @@
     "host_permissions": [
         "*://supjav.com/*",
         "*://missav.ai/*",
-        "*://asmr.one/*",
+        "*://*.asmr.one/*",
         "*://asmr18.fans/*",
         "*://japaneseasmr.com/*",
         "*://*.weeabo0.xyz/*"
+    ],
+    "web_accessible_resources": [
+        {
+            "resources": [
+                "test.jpg"
+            ],
+            "matches": [
+                "*://*.asmr.one/*",
+                "*://japaneseasmr.com/*"
+            ]
+        }
     ],
     "declarative_net_request": {
         "rule_resources": [

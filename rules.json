@@ -39,7 +39,9 @@
             ]
         },
         "condition": {
-            "urlFilter": "||pic.weeabo0.xyz/",
+            "requestDomains": [
+                "pic.weeabo0.xyz"
+            ],
             "resourceTypes": [
                 "image"
             ]

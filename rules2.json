@@ -3,12 +3,16 @@
         "id": 1,
         "priority": 1,
         "action": {
-            "type": "block"
+            "type": "redirect",
+            "redirect": {
+                "extensionPath": "/test.jpg"
+            }
         },
         "condition": {
             "resourceTypes": [
                 "image"
             ],
+            "regexFilter": "^https?://",
             "initiatorDomains": [
                 "supjav.com",
                 "missav.ai",
