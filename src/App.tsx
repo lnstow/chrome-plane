@@ -1,11 +1,11 @@
-import { useEffect, useState, forwardRef, useCallback, useRef } from 'react'
+import { useEffect, useState, forwardRef, useCallback, useRef, type ComponentPropsWithoutRef } from 'react'
 import { api } from './api'
 import { cardTypeIsItem, type CardType } from './model'
 import { CardUI } from './components/Card'
 import { IframeViewer } from './components/IframeViewer'
 import { VirtuosoGrid } from 'react-virtuoso'
 
-const GridContainer = forwardRef<HTMLDivElement, any>(({ style, children, ...props }, ref) => {
+const GridContainer = forwardRef<HTMLDivElement, ComponentPropsWithoutRef<'div'>>(({ style, children, ...props }, ref) => {
   return (
     <div
       ref={ref}
@@ -45,30 +45,32 @@ function App() {
   const testImageUrl = ruleset2Enabled && typeof chrome !== 'undefined'
     ? chrome.runtime.getURL('test.jpg')
     : undefined;
+  const activeTab = tabs.find(tab => tab.id === activeTabId);
 
-  const fetchPageData = async (targetPage: number, append: boolean = false, currentTabIdOverride?: string) => {
+  const fetchPageData = useCallback(async (targetPage: number, append: boolean = false, tabOverride?: TabInfo) => {
+    const targetTab = tabOverride || activeTab;
+    if (!targetTab) return;
+
     const requestId = ++currentRequestId.current;
-    const currentTabId = currentTabIdOverride || activeTabId;
 
     if (append) {
       setLoadingMore(true);
       setLoading(false); // 清除可能卡住的全局 loading 状态
     } else {
+      setItems([]);
+      setPage(targetPage);
       setLoading(true);
       setLoadingMore(false); // 清除可能卡住的 loadingMore 状态
     }
     setError('');
 
-    const activeTab = tabs.find(t => t.id === currentTabId);
-    if (!activeTab) return;
-
     try {
-      let baseUrl = activeTab.url;
+      let baseUrl = targetTab.url;
       if (baseUrl.endsWith('/')) {
         baseUrl = baseUrl.slice(0, -1);
       }
       const url = targetPage === 1
-        ? activeTab.url
+        ? targetTab.url
         : `${baseUrl}/page/${targetPage}/`;
       
       const data = await api.getList(url);
@@ -78,16 +80,16 @@ function App() {
       setItems(prev => append ? [...prev, ...data] : data);
       setPage(targetPage);
       if (!append) setExploreGridKey(prev => prev + 1);
-    } catch (err: any) {
+    } catch (err: unknown) {
       if (requestId !== currentRequestId.current) return;
-      setError(err.message || '获取数据失败');
+      setError(err instanceof Error ? err.message : '获取数据失败');
     } finally {
       if (requestId === currentRequestId.current) {
         if (append) setLoadingMore(false);
         else setLoading(false);
       }
     }
-  };
+  }, [activeTab]);
 
   useEffect(() => {
     api.init();
@@ -117,12 +119,16 @@ function App() {
   }, []);
 
   useEffect(() => {
-    setItems([]);
-    setPage(1);
-    setError('');
-    fetchPageData(1, false, activeTabId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTabId]);
+    let cancelled = false;
+
+    void Promise.resolve().then(() => {
+      if (!cancelled) return fetchPageData(1, false, activeTab);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeTab, fetchPageData]);
 
   const handleCloseTab = useCallback((id: string) => {
     setTabs(prev => {
@@ -192,7 +198,7 @@ function App() {
     if (!loading && !loadingMore && items.length > 0) {
       fetchPageData(page + 1, true);
     }
-  }, [loading, loadingMore, items.length, page]);
+  }, [loading, loadingMore, items.length, page, fetchPageData]);
 
   const handleFocusIframe = useCallback((url: string) => {
     viewerOrderCounter.current += 1;

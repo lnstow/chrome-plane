@@ -65,8 +65,7 @@ export const api = {
             iframe.style.scale = "0.5";
             iframe.sandbox = "allow-scripts allow-same-origin allow-forms";
 
-            // 7秒超时处理
-            let timeout: number
+            // 超时处理
             const clear = (data?: CardType[]) => {
                 pendingRequests.delete(iframe);
                 clearTimeout(timeout);
@@ -77,7 +76,7 @@ export const api = {
                 if (data) resolve(data);
                 else reject(new Error(`Timeout fetching data from ${url}`));
             }
-            timeout = setTimeout(() => { clear(); }, 22000);
+            const timeout = window.setTimeout(() => { clear(); }, 22000);
 
             // 加入全局请求管理池
             pendingRequests.set(iframe, {
