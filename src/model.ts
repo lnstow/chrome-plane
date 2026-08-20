@@ -11,8 +11,10 @@ export interface CardTypeItem extends CardType {
     cover: string      // 封面图
     info: {
         url: string        // 当前内容的链接
-        tagMain?: string[]
-        tagOther?: string[]
+        tag: {
+            label: string
+            url: string // tag的相对链接，完整url= info.url.origin+tag.url
+        }[]
     }[]
 }
 

@@ -42,11 +42,11 @@ export const CardUI: React.FC<CardProps> = ({ data, order, imageSrcOverride, onC
     const renderTags = () => {
         if (data.type === 'item') {
             const info = (data as CardTypeItem).info[0];
-            const allTags = [...(info?.tagMain || []), ...(info?.tagOther || [])];
+            const allTags = info?.tag ?? [];
             if (allTags.length > 0) {
                 return (
                     <div className="line-clamp-2 text-xs text-gray-500 mt-1 min-h-[2rem]">
-                        {allTags.join(' • ')}
+                        {allTags.map(tag => tag.label).join(' • ')}
                     </div>
                 )
             }

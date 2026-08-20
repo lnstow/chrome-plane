@@ -12,8 +12,10 @@ if (window.self !== window.top) {
                 cover: 'https://via.placeholder.com/300x200?text=Cover1',
                 info: [{
                     url: location.href,
-                    tagMain: ['Actor A'],
-                    tagOther: ['Tag 1']
+                    tag: [
+                        { label: 'Actor A', url: '' },
+                        { label: 'Tag 1', url: '' }
+                    ]
                 }]
             },
             {
@@ -32,7 +34,7 @@ if (window.self !== window.top) {
 
         let data = fakeData;
         if (location.hostname === 'japaneseasmr.com') {
-            if (document.querySelector(".fotorama__img") != null) {
+            if (document.querySelector(".plyr__poster") != null) {
                 // 详情页面
                 document.addEventListener('click', function (event) {
                     // 判断被点击的元素是否匹配你的目标
@@ -54,7 +56,7 @@ if (window.self !== window.top) {
                 let rj = ""
                 pList.forEach(p => {
                     if (p.textContent.includes("CV: ")) {
-                        cv = p.textContent.substring(4).split(", ")
+                        cv = p.textContent.substring(4).split(", ").map(label => ({ label, url: '' }))
                     }
                     if (p.textContent.includes("[RJ")) {
                         const start = p.textContent.indexOf("[RJ")
@@ -72,10 +74,15 @@ if (window.self !== window.top) {
                     cover: item.querySelector("img.lazy").getAttribute("data-src"),
                     info: [{
                         url: item.querySelector(".entry-title > a").href,
-                        tagMain: cv,
-                        tagOther: Array.from(item.querySelectorAll(".post-meta-span.post-meta-span-category a"))
-                            .map(a => a.textContent.trim())
-                            .filter(a => !a.includes("SFW") && !a.includes("Requested"))
+                        tag: [
+                            ...Array.from(item.querySelectorAll(".post-meta-span.post-meta-span-category a"))
+                                .map(a => ({
+                                    label: a.textContent.trim(),
+                                    url: relativeUrl(a.href)
+                                }))
+                                .filter(tag => !tag.label.includes("SFW") && !tag.label.includes("Requested"))
+                            , ...cv,
+                        ]
                     }]
                 })
             })
@@ -124,4 +131,10 @@ if (window.self !== window.top) {
 
 function dateStr() {
     return new Date().toISOString().substring(2, 10);
+}
+
+function relativeUrl(url) {
+    if (!url) return "";
+    const parsed = new URL(url, location.href);
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
 }

@@ -36,7 +36,10 @@
         "*://*.asmr.one/*",
         "*://asmr18.fans/*",
         "*://japaneseasmr.com/*",
-        "*://*.weeabo0.xyz/*"
+        "*://*.weeabo0.xyz/*",
+        "https://img.dlsite.jp/",
+        "https://*.zetacx.net/",
+        "https://*.book18.fans/"
     ],
     "web_accessible_resources": [
         {
@@ -44,7 +47,10 @@
                 "test.jpg"
             ],
             "matches": [
+                "*://supjav.com/*",
+                "*://missav.ai/*",
                 "*://*.asmr.one/*",
+                "*://asmr18.fans/*",
                 "*://japaneseasmr.com/*"
             ]
         }
