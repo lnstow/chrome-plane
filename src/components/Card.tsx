@@ -4,19 +4,21 @@ import type { CardType, CardTypeItem, CardTypeList } from '../model';
 interface CardProps {
     data: CardType;
     order?: number;
+    imageSrcOverride?: string;
     onClick?: (data: CardType) => void;
 }
 
-export const CardUI: React.FC<CardProps> = ({ data, order, onClick }) => {
+export const CardUI: React.FC<CardProps> = ({ data, order, imageSrcOverride, onClick }) => {
 
     // 根据类型渲染图片区域
     const renderCover = () => {
         if (data.type === 'item') {
             const itemRoot = (data as CardTypeItem).meta[0];
+            const cover = imageSrcOverride ?? itemRoot?.cover;
 
-            return itemRoot?.cover ? (
+            return cover ? (
                 <div className="w-full h-44 bg-gray-200 overflow-hidden flex items-center justify-center">
-                    <img src={itemRoot.cover} alt="cover" className="object-contain w-full h-full" />
+                    <img src={cover} alt="cover" className="object-contain w-full h-full" />
                 </div>
             ) : <div className="w-full h-44 bg-gray-200" />;
         }
@@ -27,7 +29,7 @@ export const CardUI: React.FC<CardProps> = ({ data, order, onClick }) => {
                 <div className="w-full h-44 bg-gray-100 flex gap-1 p-1 overflow-hidden">
                     {listData.previewImgs?.slice(0, 3).map((img, idx) => (
                         <div key={idx} className="flex-1 bg-gray-300 relative border border-white">
-                            <img src={img} alt="preview" className="object-contain w-full h-full absolute inset-0" />
+                            <img src={imageSrcOverride ?? img} alt="preview" className="object-contain w-full h-full absolute inset-0" />
                         </div>
                     ))}
                 </div>

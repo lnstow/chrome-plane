@@ -39,8 +39,12 @@ function App() {
   const [page, setPage] = useState(1);
   const [exploreGridKey, setExploreGridKey] = useState(0);
   const [viewers, setViewers] = useState<{ url: string, order: number, show: boolean, key: string }[]>([]);
+  const [ruleset2Enabled, setRuleset2Enabled] = useState(false);
   const viewerOrderCounter = useRef(0);
   const currentRequestId = useRef(0);
+  const testImageUrl = ruleset2Enabled && typeof chrome !== 'undefined'
+    ? chrome.runtime.getURL('test.jpg')
+    : undefined;
 
   const fetchPageData = async (targetPage: number, append: boolean = false, currentTabIdOverride?: string) => {
     const requestId = ++currentRequestId.current;
@@ -87,6 +91,29 @@ function App() {
 
   useEffect(() => {
     api.init();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const readRulesetState = async () => {
+      if (typeof chrome === 'undefined' || !chrome.declarativeNetRequest?.getEnabledRulesets) return;
+
+      try {
+        const enabledRulesets = await chrome.declarativeNetRequest.getEnabledRulesets();
+        if (!cancelled) setRuleset2Enabled(enabledRulesets.includes('ruleset_2'));
+      } catch (error) {
+        console.error('读取 ruleset_2 状态失败:', error);
+      }
+    };
+
+    void readRulesetState();
+    window.addEventListener('focus', readRulesetState);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('focus', readRulesetState);
+    };
   }, []);
 
   useEffect(() => {
@@ -243,7 +270,7 @@ function App() {
             itemContent={(index, item) => {
               const viewer = viewers.find(v => v.key === item.key);
               return (
-                <CardUI key={`${item.key}_${index}`} data={item} order={viewer?.order} onClick={handleSelectCard} />
+                <CardUI key={`${item.key}_${index}`} data={item} order={viewer?.order} imageSrcOverride={testImageUrl} onClick={handleSelectCard} />
               )
             }}
           />
@@ -277,7 +304,7 @@ function App() {
               itemContent={(index, item) => {
                 const viewer = viewers.find(v => v.key === item.key);
                 return (
-                  <CardUI key={`${item.key}_${index}`} data={item} order={viewer?.order} onClick={handleViewCard} />
+                  <CardUI key={`${item.key}_${index}`} data={item} order={viewer?.order} imageSrcOverride={testImageUrl} onClick={handleViewCard} />
                 )
               }}
             />
