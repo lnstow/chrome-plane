@@ -180,7 +180,7 @@ function App() {
         }
 
         const next = [...prev];
-        if (next.length >= 10) {
+        if (next.length >= 20) {
           let minIndex = 0;
           for (let i = 1; i < next.length; i++) {
             if (next[i].order < next[minIndex].order) minIndex = i;
@@ -325,7 +325,12 @@ function App() {
           index={v.order}
           show={v.show}
           onFocus={() => handleFocusIframe(v.url)}
-          onClose={() => setViewers(prev => prev.map(u => u.url === v.url ? { ...u, show: false } : u))}
+          onDelete={() => {
+            setSavedItems(prev => prev.filter(item => item.key !== v.key));
+            setViewers(prev => prev.filter(u => u.url !== v.url));
+          }}
+          onMinimize={() => setViewers(prev => prev.map(u => u.url === v.url ? { ...u, show: false } : u))}
+          onClose={() => setViewers(prev => prev.filter(u => u.url !== v.url))}
         />
       ))}
     </div>

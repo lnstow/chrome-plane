@@ -6,10 +6,12 @@ interface IframeViewerProps {
   index: number;
   show: boolean;
   onFocus: () => void;
+  onDelete: () => void;
+  onMinimize: () => void;
   onClose: () => void;
 }
 
-export const IframeViewer: React.FC<IframeViewerProps> = ({ url, index, show, onFocus, onClose }) => {
+export const IframeViewer: React.FC<IframeViewerProps> = ({ url, index, show, onFocus, onDelete, onMinimize, onClose }) => {
   const SCALE = 0.75; // 在这里可以随意修改这个不规则数字
   const height = 700
   const [isInteracting, setIsInteracting] = useState(false);
@@ -46,7 +48,7 @@ export const IframeViewer: React.FC<IframeViewerProps> = ({ url, index, show, on
       onResizeStart={() => setIsInteracting(true)}
       onResizeStop={() => setIsInteracting(false)}
     >
-      <div className="h-8 bg-gray-900 flex justify-between items-center px-6 cursor-move rnd-drag-handle border-b border-gray-700 rounded-t-md">
+      <div className="h-9 bg-gray-900 flex justify-between items-center pl-6 cursor-move rnd-drag-handle border-b border-gray-700 rounded-t-md">
         <span
           className="text-gray-300 text-xs truncate max-w-[80%] cursor-pointer hover:text-white transition-colors"
           title="点击复制链接"
@@ -54,12 +56,32 @@ export const IframeViewer: React.FC<IframeViewerProps> = ({ url, index, show, on
         >
           {url}
         </span>
-        <button
-          onClick={onClose}
-          className="text-gray-400 hover:text-white transition-colors cursor-pointer"
-        >
-          ✕
-        </button>
+        <div className="h-full flex items-stretch shrink-0 mr-4">
+          <button
+            type="button"
+            title="从右侧列表删除"
+            onClick={onDelete}
+            className="px-3 text-xs text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors cursor-pointer"
+          >
+            删除
+          </button>
+          <button
+            type="button"
+            title="缩小"
+            onClick={onMinimize}
+            className="w-10 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors cursor-pointer"
+          >
+            —
+          </button>
+          <button
+            type="button"
+            title="关闭 iframe"
+            onClick={onClose}
+            className="w-10 text-gray-400 hover:bg-red-600 hover:text-white transition-colors cursor-pointer rounded-tr-md"
+          >
+            ✕
+          </button>
+        </div>
       </div>
       <div className="flex-1 relative overflow-hidden bg-gray-950 rounded-b-md">
         <iframe
