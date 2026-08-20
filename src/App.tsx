@@ -170,7 +170,7 @@ function App() {
 
   const handleViewCard = useCallback((card: CardType) => {
     if (cardTypeIsItem(card)) {
-      const url = card.meta[0].url;
+      const url = card.info[0].url;
       viewerOrderCounter.current += 1;
       const currentOrder = viewerOrderCounter.current;
       setViewers(prev => {

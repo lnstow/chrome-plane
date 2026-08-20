@@ -8,13 +8,11 @@ export interface CardType {
 
 export interface CardTypeItem extends CardType {
     type: 'item'
-    meta: {
+    cover: string      // 封面图
+    info: {
         url: string        // 当前内容的链接
-        cover: string      // 封面图
-        tag?: {
-            actor?: string[]
-            other?: string[]
-        }
+        tagMain?: string[]
+        tagOther?: string[]
     }[]
 }
 

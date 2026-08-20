@@ -9,11 +9,11 @@ if (window.self !== window.top) {
                 type: 'item',
                 updateDate: dateStr(),
                 updateCount: 1,
-                meta: [{
-                    domain: location.hostname,
+                cover: 'https://via.placeholder.com/300x200?text=Cover1',
+                info: [{
                     url: location.href,
-                    cover: 'https://via.placeholder.com/300x200?text=Cover1',
-                    tag: { actor: ['Actor A'], other: ['Tag 1'] }
+                    tagMain: ['Actor A'],
+                    tagOther: ['Tag 1']
                 }]
             },
             {
@@ -69,15 +69,13 @@ if (window.self !== window.top) {
                     type: 'item',
                     updateDate: dateStr(),
                     updateCount: 1,
-                    meta: [{
+                    cover: item.querySelector("img.lazy").getAttribute("data-src"),
+                    info: [{
                         url: item.querySelector(".entry-title > a").href,
-                        cover: item.querySelector("img.lazy").getAttribute("data-src"),
-                        tag: {
-                            actor: cv,
-                            other: Array.from(item.querySelectorAll(".post-meta-span.post-meta-span-category a"))
-                                .map(a => a.textContent.trim())
-                                .filter(a => !a.includes("SFW") && !a.includes("Requested"))
-                        }
+                        tagMain: cv,
+                        tagOther: Array.from(item.querySelectorAll(".post-meta-span.post-meta-span-category a"))
+                            .map(a => a.textContent.trim())
+                            .filter(a => !a.includes("SFW") && !a.includes("Requested"))
                     }]
                 })
             })

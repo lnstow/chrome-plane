@@ -13,8 +13,7 @@ export const CardUI: React.FC<CardProps> = ({ data, order, imageSrcOverride, onC
     // 根据类型渲染图片区域
     const renderCover = () => {
         if (data.type === 'item') {
-            const itemRoot = (data as CardTypeItem).meta[0];
-            const cover = imageSrcOverride ?? itemRoot?.cover;
+            const cover = imageSrcOverride ?? (data as CardTypeItem).cover;
 
             return cover ? (
                 <div className="w-full h-44 bg-gray-200 overflow-hidden flex items-center justify-center">
@@ -42,8 +41,8 @@ export const CardUI: React.FC<CardProps> = ({ data, order, imageSrcOverride, onC
     // 渲染 Tag
     const renderTags = () => {
         if (data.type === 'item') {
-            const tag = (data as CardTypeItem).meta[0]?.tag;
-            const allTags = [...(tag?.actor || []), ...(tag?.other || [])];
+            const info = (data as CardTypeItem).info[0];
+            const allTags = [...(info?.tagMain || []), ...(info?.tagOther || [])];
             if (allTags.length > 0) {
                 return (
                     <div className="line-clamp-2 text-xs text-gray-500 mt-1 min-h-[2rem]">
