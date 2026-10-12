@@ -1,5 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Rnd } from 'react-rnd';
+import { Minus, RefreshCw, Trash2, X } from 'lucide-react';
+
+const windowButtonClassName = 'h-full w-10 shrink-0 p-0 flex items-center justify-center transition-colors cursor-pointer';
 
 interface IframeViewerProps {
   url: string;
@@ -15,6 +18,7 @@ export const IframeViewer: React.FC<IframeViewerProps> = ({ url, index, show, on
   const SCALE = 0.75; // 在这里可以随意修改这个不规则数字
   const height = 700
   const [isInteracting, setIsInteracting] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
@@ -40,6 +44,7 @@ export const IframeViewer: React.FC<IframeViewerProps> = ({ url, index, show, on
       minWidth={200}
       minHeight={150}
       dragHandleClassName="rnd-drag-handle"
+      cancel="button"
       className="bg-gray-800 border border-gray-600 shadow-2xl rounded-md"
       style={{ position: 'fixed', display: show ? 'flex' : 'none', flexDirection: 'column', zIndex: 50 + index }}
       onMouseDownCapture={onFocus}
@@ -50,7 +55,7 @@ export const IframeViewer: React.FC<IframeViewerProps> = ({ url, index, show, on
     >
       <div className="h-9 bg-gray-900 flex justify-between items-center pl-6 cursor-move rnd-drag-handle border-b border-gray-700 rounded-t-md">
         <span
-          className="text-gray-300 text-xs truncate max-w-[80%] cursor-pointer hover:text-white transition-colors"
+          className="min-w-0 flex-1 text-gray-300 text-xs truncate cursor-pointer hover:text-white transition-colors"
           title="点击复制链接"
           onClick={() => navigator.clipboard.writeText(url)}
         >
@@ -61,30 +66,39 @@ export const IframeViewer: React.FC<IframeViewerProps> = ({ url, index, show, on
             type="button"
             title="从右侧列表删除"
             onClick={onDelete}
-            className="px-3 text-xs text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-colors cursor-pointer"
+            className={`${windowButtonClassName} text-red-400 hover:bg-red-500/20 hover:text-red-300`}
           >
-            删除
+            <Trash2 size={16} className="shrink-0" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            title="刷新窗口"
+            onClick={() => setReloadKey(key => key + 1)}
+            className={`${windowButtonClassName} text-gray-400 hover:bg-gray-700 hover:text-white`}
+          >
+            <RefreshCw size={16} className="shrink-0" aria-hidden="true" />
           </button>
           <button
             type="button"
             title="缩小"
             onClick={onMinimize}
-            className="w-10 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors cursor-pointer"
+            className={`${windowButtonClassName} text-gray-400 hover:bg-gray-700 hover:text-white`}
           >
-            —
+            <Minus size={16} className="shrink-0" aria-hidden="true" />
           </button>
           <button
             type="button"
             title="关闭 iframe"
             onClick={onClose}
-            className="w-10 text-gray-400 hover:bg-red-600 hover:text-white transition-colors cursor-pointer rounded-tr-md"
+            className={`${windowButtonClassName} text-gray-400 hover:bg-red-600 hover:text-white rounded-tr-md`}
           >
-            ✕
+            <X size={16} className="shrink-0" aria-hidden="true" />
           </button>
         </div>
       </div>
       <div className="flex-1 relative overflow-hidden bg-gray-950 rounded-b-md">
         <iframe
+          key={reloadKey}
           ref={iframeRef}
           src={url}
           className="absolute top-0 left-0 border-none origin-top-left"

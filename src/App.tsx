@@ -26,6 +26,13 @@ interface TabInfo {
   closable: boolean;
 }
 
+interface Viewer {
+  url: string;
+  order: number;
+  show: boolean;
+  key: string;
+}
+
 function App() {
   const [tabs, setTabs] = useState<TabInfo[]>([
     { id: 'japaneseasmr', title: 'JapaneseASMR', url: 'https://japaneseasmr.com', closable: false }
@@ -38,14 +45,35 @@ function App() {
   const [error, setError] = useState<string>('');
   const [page, setPage] = useState(1);
   const [exploreGridKey, setExploreGridKey] = useState(0);
-  const [viewers, setViewers] = useState<{ url: string, order: number, show: boolean, key: string }[]>([]);
+  const [{ viewers }, setViewerState] = useState<{ viewers: Viewer[], viewerOrderCounter: number }>({
+    viewers: [],
+    viewerOrderCounter: 0,
+  });
   const [ruleset2Enabled, setRuleset2Enabled] = useState(false);
-  const viewerOrderCounter = useRef(0);
   const currentRequestId = useRef(0);
   const testImageUrl = ruleset2Enabled && typeof chrome !== 'undefined'
     ? chrome.runtime.getURL('test.jpg')
     : undefined;
   const activeTab = tabs.find(tab => tab.id === activeTabId);
+
+  const updateViewers = useCallback((update: (prev: Viewer[], order: number) => Viewer[], increaseOrder = false) => {
+    setViewerState(prev => {
+      const viewerOrderCounter = prev.viewerOrderCounter + (increaseOrder ? 1 : 0);
+      const next = update(prev.viewers, viewerOrderCounter);
+      if (viewerOrderCounter <= 10000) {
+        return { viewers: next, viewerOrderCounter };
+      }
+
+      // 保留原有层级和数组顺序，仅将 order 压缩为 1 到窗口数量。
+      const orders = new Map([...next]
+        .sort((a, b) => a.order - b.order)
+        .map((viewer, index) => [viewer.url, index + 1]));
+      return {
+        viewers: next.map(viewer => ({ ...viewer, order: orders.get(viewer.url)! })),
+        viewerOrderCounter: next.length,
+      };
+    });
+  }, []);
 
   const fetchPageData = useCallback(async (targetPage: number, append: boolean = false, tabOverride?: TabInfo) => {
     const targetTab = tabOverride || activeTab;
@@ -171,9 +199,7 @@ function App() {
   const handleViewCard = useCallback((card: CardType) => {
     if (cardTypeIsItem(card)) {
       const url = card.info[0].url;
-      viewerOrderCounter.current += 1;
-      const currentOrder = viewerOrderCounter.current;
-      setViewers(prev => {
+      updateViewers((prev, currentOrder) => {
         const existing = prev.find(v => v.url === url);
         if (existing) {
           return prev.map(v => v.url === url ? { ...v, order: currentOrder, show: true } : v);
@@ -189,9 +215,9 @@ function App() {
         }
         next.push({ url, order: currentOrder, show: true, key: card.key });
         return next;
-      });
+      }, true);
     }
-  }, []);
+  }, [updateViewers]);
 
   const loadMore = useCallback(() => {
     // 即使有 error，只要用户继续滚动或重试，也允许重新触发
@@ -201,10 +227,8 @@ function App() {
   }, [loading, loadingMore, items.length, page, fetchPageData]);
 
   const handleFocusIframe = useCallback((url: string) => {
-    viewerOrderCounter.current += 1;
-    const currentOrder = viewerOrderCounter.current;
-    setViewers(prev => prev.map(v => v.url === url ? { ...v, order: currentOrder } : v));
-  }, []);
+    updateViewers((prev, currentOrder) => prev.map(v => v.url === url ? { ...v, order: currentOrder } : v), true);
+  }, [updateViewers]);
 
   const handleJumpPage = () => {
     const input = prompt('请输入要跳转的页码:', String(page));
@@ -327,10 +351,10 @@ function App() {
           onFocus={() => handleFocusIframe(v.url)}
           onDelete={() => {
             setSavedItems(prev => prev.filter(item => item.key !== v.key));
-            setViewers(prev => prev.filter(u => u.url !== v.url));
+            updateViewers(prev => prev.filter(u => u.url !== v.url));
           }}
-          onMinimize={() => setViewers(prev => prev.map(u => u.url === v.url ? { ...u, show: false } : u))}
-          onClose={() => setViewers(prev => prev.filter(u => u.url !== v.url))}
+          onMinimize={() => updateViewers(prev => prev.map(u => u.url === v.url ? { ...u, show: false } : u))}
+          onClose={() => updateViewers(prev => prev.filter(u => u.url !== v.url))}
         />
       ))}
     </div>
