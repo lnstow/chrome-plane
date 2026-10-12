@@ -5,16 +5,15 @@ interface CardProps {
     data: CardType;
     imageSrcOverride?: string;
     onClick?: (data: CardType) => void;
+    onCopy: (text: string) => void;
 }
 
-export const CardUI: React.FC<CardProps> = ({ data, imageSrcOverride, onClick }) => {
+export const CardUI: React.FC<CardProps> = ({ data, imageSrcOverride, onClick, onCopy }) => {
     const displayTitle = data.title || data.key;
     const tags = data.type === 'item' ? (data as CardTypeItem).info[0]?.tag ?? [] : [];
 
     const copyTitle = () => {
-        void navigator.clipboard.writeText(displayTitle).catch(error => {
-            console.error('复制标题失败:', error);
-        });
+        onCopy(displayTitle);
     };
 
     // 根据类型渲染图片区域

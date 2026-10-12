@@ -8,13 +8,14 @@ interface IframeViewerProps {
   url: string;
   index: number;
   show: boolean;
+  onCopy: (text: string) => void;
   onFocus: () => void;
   onDelete: () => void;
   onMinimize: () => void;
   onClose: () => void;
 }
 
-export const IframeViewer: React.FC<IframeViewerProps> = ({ url, index, show, onFocus, onDelete, onMinimize, onClose }) => {
+export const IframeViewer: React.FC<IframeViewerProps> = ({ url, index, show, onCopy, onFocus, onDelete, onMinimize, onClose }) => {
   const SCALE = 0.75; // 在这里可以随意修改这个不规则数字
   const height = 700
   const [isInteracting, setIsInteracting] = useState(false);
@@ -57,7 +58,7 @@ export const IframeViewer: React.FC<IframeViewerProps> = ({ url, index, show, on
         <span
           className="min-w-0 flex-1 text-gray-300 text-xs truncate cursor-pointer hover:text-white transition-colors"
           title="点击复制链接"
-          onClick={() => navigator.clipboard.writeText(url)}
+          onClick={() => onCopy(url)}
         >
           {url}
         </span>

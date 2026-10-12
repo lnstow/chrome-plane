@@ -54,6 +54,8 @@ function App() {
     viewerOrderCounter: 0,
   });
   const [ruleset2Enabled, setRuleset2Enabled] = useState(false);
+  const [toastText, setToastText] = useState('');
+  const toastTimeout = useRef<number | undefined>(undefined);
   const currentRequestId = useRef(0);
   const testImageUrl = ruleset2Enabled && typeof chrome !== 'undefined'
     ? chrome.runtime.getURL('test.jpg')
@@ -126,6 +128,25 @@ function App() {
 
   useEffect(() => {
     api.init();
+  }, []);
+
+  const showToast = useCallback((text: string) => {
+    window.clearTimeout(toastTimeout.current);
+    setToastText(text);
+    toastTimeout.current = window.setTimeout(() => setToastText(''), 3000);
+  }, []);
+
+  const handleCopy = useCallback(async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast(`已复制 ${text}`);
+    } catch (error) {
+      console.error('复制失败:', error);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    return () => window.clearTimeout(toastTimeout.current);
   }, []);
 
   useEffect(() => {
@@ -256,6 +277,19 @@ function App() {
 
   return (
     <div className="flex h-screen w-screen bg-gray-900 text-gray-200 overflow-hidden text-sm">
+      <div
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="fixed top-16 left-1/2 -translate-x-1/2 z-[11000] w-max max-w-[calc(100vw-2rem)] pointer-events-none"
+      >
+        {toastText && (
+          <div className="min-w-48 rounded-full border border-blue-500 bg-blue-600 px-10 py-4 text-center text-xl font-semibold text-white shadow-lg break-words">
+            {toastText}
+          </div>
+        )}
+      </div>
+
       {/* 左侧列表 */}
       <div className="w-1/2 flex flex-col border-r border-gray-700 relative">
         {/* Tab 栏 */}
@@ -312,7 +346,7 @@ function App() {
               )
             }}
             itemContent={(index, item) => (
-              <CardUI key={`${item.key}_${index}`} data={item} imageSrcOverride={testImageUrl} onClick={handleSelectCard} />
+              <CardUI key={`${item.key}_${index}`} data={item} imageSrcOverride={testImageUrl} onClick={handleSelectCard} onCopy={handleCopy} />
             )}
           />
         </div>
@@ -380,7 +414,7 @@ function App() {
                 List: GridContainer,
               }}
               itemContent={(index, item) => (
-                <CardUI key={`${item.key}_${index}`} data={item} imageSrcOverride={testImageUrl} onClick={handleViewCard} />
+                <CardUI key={`${item.key}_${index}`} data={item} imageSrcOverride={testImageUrl} onClick={handleViewCard} onCopy={handleCopy} />
               )}
             />
           )}
@@ -393,6 +427,7 @@ function App() {
           url={v.url}
           index={v.order}
           show={v.show}
+          onCopy={handleCopy}
           onFocus={() => handleFocusIframe(v.url)}
           onDelete={() => {
             setSavedItems(prev => prev.filter(item => item.key !== v.key));
