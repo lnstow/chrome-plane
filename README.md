@@ -21,6 +21,8 @@ bun+vite+react+unocss
 - `src/content/sites/placeholder.ts`：尚未实现解析的站点使用的占位数据。
 - `src/content/sites/index.ts`：按域名选择解析方法；新增站点模块后在这里注册，并按需补充 manifest 中的域名配置。
 
+解析测试使用 `bun test`。用例在 `src/content/test/content.test.ts` 中登记，读取同目录的 HTML，忽略解析结果中的 `updateCount` 和 `updateDate`。
+
 ---
 
 ## 4. 关键业务逻辑 (Core Business Logic)

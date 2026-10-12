@@ -38,10 +38,9 @@
         if (p.textContent.includes("CV: ")) {
           cv = p.textContent.substring(4).split(", ").map((label) => ({ label, url: "" }));
         }
-        if (p.textContent.includes("[RJ")) {
-          const start = p.textContent.indexOf("[RJ");
-          const end = p.textContent.indexOf("]", start);
-          rj = p.textContent.substring(start + 1, end);
+        const rjMatch = p.textContent.match(/\[(RJ\d+)\]/) ?? p.textContent.match(/RJ Code:\s*(RJ\d+)\b/);
+        if (rjMatch) {
+          rj = rjMatch[1];
         }
       });
       const link = item.querySelector(".entry-title > a");
