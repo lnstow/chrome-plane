@@ -2,8 +2,10 @@ import { useEffect, useState, forwardRef, useCallback, useRef, type ComponentPro
 import { api } from './api'
 import { cardTypeIsItem, type CardType } from './model'
 import { CardUI } from './components/Card'
+import { RecentCard } from './components/RecentCard'
 import { IframeViewer } from './components/IframeViewer'
 import { VirtuosoGrid } from 'react-virtuoso'
+import { CopyMinus } from 'lucide-react'
 
 const GridContainer = forwardRef<HTMLDivElement, ComponentPropsWithoutRef<'div'>>(({ style, children, ...props }, ref) => {
   return (
@@ -31,6 +33,7 @@ interface Viewer {
   order: number;
   show: boolean;
   key: string;
+  card: CardType;
 }
 
 function App() {
@@ -40,6 +43,7 @@ function App() {
   const [activeTabId, setActiveTabId] = useState<string>('japaneseasmr');
   const [items, setItems] = useState<CardType[]>([]);
   const [savedItems, setSavedItems] = useState<CardType[]>([]);
+  const [activeRightTab, setActiveRightTab] = useState<'saved' | 'recent'>('saved');
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string>('');
@@ -55,6 +59,7 @@ function App() {
     ? chrome.runtime.getURL('test.jpg')
     : undefined;
   const activeTab = tabs.find(tab => tab.id === activeTabId);
+  const recentViewers = [...viewers].sort((a, b) => b.order - a.order);
 
   const updateViewers = useCallback((update: (prev: Viewer[], order: number) => Viewer[], increaseOrder = false) => {
     setViewerState(prev => {
@@ -202,7 +207,7 @@ function App() {
       updateViewers((prev, currentOrder) => {
         const existing = prev.find(v => v.url === url);
         if (existing) {
-          return prev.map(v => v.url === url ? { ...v, order: currentOrder, show: true } : v);
+          return prev.map(v => v.url === url ? { ...v, order: currentOrder, show: true, key: card.key, card } : v);
         }
 
         const next = [...prev];
@@ -213,9 +218,11 @@ function App() {
           }
           next.splice(minIndex, 1);
         }
-        next.push({ url, order: currentOrder, show: true, key: card.key });
+        next.push({ url, order: currentOrder, show: true, key: card.key, card });
         return next;
       }, true);
+    } else if (card.type === 'list') {
+      window.alert('todo');
     }
   }, [updateViewers]);
 
@@ -228,6 +235,13 @@ function App() {
 
   const handleFocusIframe = useCallback((url: string) => {
     updateViewers((prev, currentOrder) => prev.map(v => v.url === url ? { ...v, order: currentOrder } : v), true);
+  }, [updateViewers]);
+
+  const handleToggleViewers = useCallback(() => {
+    updateViewers(prev => {
+      const show = !prev.some(viewer => viewer.show);
+      return prev.map(viewer => ({ ...viewer, show }));
+    });
   }, [updateViewers]);
 
   const handleJumpPage = () => {
@@ -297,12 +311,9 @@ function App() {
                 </div>
               )
             }}
-            itemContent={(index, item) => {
-              const viewer = viewers.find(v => v.key === item.key);
-              return (
-                <CardUI key={`${item.key}_${index}`} data={item} order={viewer?.order} imageSrcOverride={testImageUrl} onClick={handleSelectCard} />
-              )
-            }}
+            itemContent={(index, item) => (
+              <CardUI key={`${item.key}_${index}`} data={item} imageSrcOverride={testImageUrl} onClick={handleSelectCard} />
+            )}
           />
         </div>
 
@@ -317,12 +328,49 @@ function App() {
       </div>
 
       {/* 右侧列表 */}
-      <div className="w-1/2 flex flex-col">
-        <div className="p-3 border-b border-gray-700 font-bold tracking-wider text-green-400">
-          已保存至内存 ({savedItems.length})
+      <div className="w-1/2 min-w-0 flex flex-col">
+        <div className="flex shrink-0 border-b border-gray-700">
+          <button
+            type="button"
+            onClick={() => setActiveRightTab('saved')}
+            className={`px-3 py-3 rounded-none border-0 border-b-2 font-bold tracking-wider transition-colors ${
+              activeRightTab === 'saved' ? 'border-green-400 bg-gray-800 text-green-400' : 'border-transparent bg-transparent text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+            }`}
+          >
+            已保存至内存 ({savedItems.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveRightTab('recent')}
+            className={`px-3 py-3 rounded-none border-0 border-b-2 font-bold tracking-wider transition-colors ${
+              activeRightTab === 'recent' ? 'border-green-400 bg-gray-800 text-green-400' : 'border-transparent bg-transparent text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+            }`}
+          >
+            最近观看 ({viewers.length})
+          </button>
+          <button
+            type="button"
+            disabled={viewers.length === 0}
+            onClick={handleToggleViewers}
+            className="flex w-10 shrink-0 items-center justify-center p-0 rounded-none border-0 bg-transparent text-gray-400 hover:bg-gray-800 hover:text-white transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <CopyMinus size={16} className="shrink-0" aria-hidden="true" />
+          </button>
         </div>
-        <div className="flex-1 p-4 relative">
-          {savedItems.length === 0 ? (
+        <div className="flex-1 min-h-0 p-4 relative">
+          {activeRightTab === 'recent' ? (
+            recentViewers.length === 0 ? (
+              <div className="text-gray-500 text-center text-sm absolute inset-0 flex items-center justify-center">暂无最近观看</div>
+            ) : (
+              <div className="h-full overflow-y-auto">
+                <div className="grid grid-cols-3 gap-4 auto-rows-max">
+                  {recentViewers.map(viewer => (
+                    <RecentCard key={viewer.url} data={viewer.card} imageSrcOverride={testImageUrl} onClick={handleViewCard} />
+                  ))}
+                </div>
+              </div>
+            )
+          ) : savedItems.length === 0 ? (
             <div className="text-gray-500 mt-10 text-center text-sm absolute inset-0 flex items-center justify-center">点击左侧卡片添加至此</div>
           ) : (
             <VirtuosoGrid
@@ -331,12 +379,9 @@ function App() {
               components={{
                 List: GridContainer,
               }}
-              itemContent={(index, item) => {
-                const viewer = viewers.find(v => v.key === item.key);
-                return (
-                  <CardUI key={`${item.key}_${index}`} data={item} order={viewer?.order} imageSrcOverride={testImageUrl} onClick={handleViewCard} />
-                )
-              }}
+              itemContent={(index, item) => (
+                <CardUI key={`${item.key}_${index}`} data={item} imageSrcOverride={testImageUrl} onClick={handleViewCard} />
+              )}
             />
           )}
         </div>

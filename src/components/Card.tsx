@@ -3,12 +3,11 @@ import type { CardType, CardTypeItem, CardTypeList } from '../model';
 
 interface CardProps {
     data: CardType;
-    order?: number;
     imageSrcOverride?: string;
     onClick?: (data: CardType) => void;
 }
 
-export const CardUI: React.FC<CardProps> = ({ data, order, imageSrcOverride, onClick }) => {
+export const CardUI: React.FC<CardProps> = ({ data, imageSrcOverride, onClick }) => {
     const displayTitle = data.title || data.key;
     const tags = data.type === 'item' ? (data as CardTypeItem).info[0]?.tag ?? [] : [];
 
@@ -52,8 +51,8 @@ export const CardUI: React.FC<CardProps> = ({ data, order, imageSrcOverride, onC
             onClick={() => onClick?.(data)}
         >
             {renderCover()}
-            <div className="flex items-end gap-2 p-2 border-t border-gray-700">
-                <div className="min-w-0 flex-1 h-22 overflow-x-hidden overflow-y-auto text-sm leading-7 break-words">
+            <div className="p-2 border-t border-gray-700">
+                <div className="min-w-0 h-22 overflow-x-hidden overflow-y-auto text-sm leading-7 break-words">
                     <span
                         role="button"
                         tabIndex={0}
@@ -90,11 +89,6 @@ export const CardUI: React.FC<CardProps> = ({ data, order, imageSrcOverride, onC
                         </React.Fragment>
                     ))}
                 </div>
-                {order !== undefined && (
-                    <div className="shrink-0 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded shadow-md">
-                        {order}
-                    </div>
-                )}
             </div>
         </div>
     );
