@@ -5,17 +5,21 @@
   function dateStr() {
     return new Date().toISOString().substring(2, 10);
   }
-  function relativeUrl(url) {
+  function relativeUrl(url, baseUrl = location.href) {
     if (!url)
       return "";
-    const parsed = new URL(url, location.href);
-    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    const parsed = new URL(url, baseUrl);
+    return decodeURIComponent(`${parsed.pathname}${parsed.search}${parsed.hash}`);
+  }
+  function getHref(a, baseUrl = location.href) {
+    const href = a.getAttribute("href");
+    return href === null ? "" : new URL(href, baseUrl).href;
   }
 
   // src/content/sites/japaneseasmr.ts
-  function parseJapaneseAsmr() {
-    if (document.querySelector(".plyr__poster") !== null) {
-      document.addEventListener("click", (event) => {
+  function parseJapaneseAsmr(doc = document, pageUrl = location.href) {
+    if (doc.querySelector(".plyr__poster") !== null) {
+      doc.addEventListener("click", (event) => {
         if (event.target instanceof Element && event.target.matches("a")) {
           event.preventDefault();
           event.stopPropagation();
@@ -26,7 +30,7 @@
       return;
     }
     const data = [];
-    const list = document.querySelectorAll("div.entry-preview-wrapper.clearfix");
+    const list = doc.querySelectorAll("div.entry-preview-wrapper.clearfix");
     list.forEach((item) => {
       let cv = [];
       let rj = "";
@@ -43,15 +47,15 @@
       const link = item.querySelector(".entry-title > a");
       data.push({
         key: rj,
-        title: link.textContent.trim(),
+        title: "",
         type: "item",
         updateDate: dateStr(),
         updateCount: 1,
         cover: item.querySelector("img.lazy").getAttribute("data-src"),
         info: [{
-          url: link.href,
+          url: getHref(link, pageUrl),
           tag: [
-            ...Array.from(item.querySelectorAll(".post-meta-span.post-meta-span-category a")).map((a) => ({ label: a.textContent.trim(), url: relativeUrl(a.href) })).filter((tag) => !tag.label.includes("SFW") && !tag.label.includes("Requested")),
+            ...Array.from(item.querySelectorAll(".post-meta-span.post-meta-span-category a")).map((a) => ({ label: a.textContent.trim(), url: relativeUrl(getHref(a, pageUrl), pageUrl) })).filter((tag) => !tag.label.includes("SFW") && !tag.label.includes("Requested")),
             ...cv
           ]
         }]
@@ -61,17 +65,18 @@
   }
 
   // src/content/sites/placeholder.ts
-  function parsePlaceholder() {
+  function parsePlaceholder(pageUrl = location.href) {
+    const hostname = new URL(pageUrl).hostname;
     return [
       {
-        key: location.href + "_1",
-        title: "Parsed Title 1 from " + location.hostname,
+        key: pageUrl + "_1",
+        title: "Parsed Title 1 from " + hostname,
         type: "item",
         updateDate: dateStr(),
         updateCount: 1,
         cover: "https://via.placeholder.com/300x200?text=Cover1",
         info: [{
-          url: location.href,
+          url: pageUrl,
           tag: [
             { label: "Actor A", url: "" },
             { label: "Tag 1", url: "" }
@@ -79,8 +84,8 @@
         }]
       },
       {
-        key: location.href + "_2",
-        title: "Parsed Title 2 from " + location.hostname,
+        key: pageUrl + "_2",
+        title: "Parsed Title 2 from " + hostname,
         type: "list",
         updateDate: dateStr(),
         updateCount: 5,
@@ -97,9 +102,9 @@
   var siteParsers = {
     "japaneseasmr.com": parseJapaneseAsmr
   };
-  function parsePage() {
-    const parser = siteParsers[location.hostname] ?? parsePlaceholder;
-    return parser();
+  function parsePage(doc = document, pageUrl = location.href) {
+    const parser = siteParsers[new URL(pageUrl).hostname];
+    return parser ? parser(doc, pageUrl) : parsePlaceholder(pageUrl);
   }
 
   // src/content/index.ts

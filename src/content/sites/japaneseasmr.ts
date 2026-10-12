@@ -1,10 +1,10 @@
 import type { CardTypeItem } from '../../model';
-import { dateStr, relativeUrl } from '../utils';
+import { dateStr, getHref, relativeUrl } from '../utils';
 
-export function parseJapaneseAsmr(): CardTypeItem[] | undefined {
-    if (document.querySelector('.plyr__poster') !== null) {
+export function parseJapaneseAsmr(doc: Document = document, pageUrl = location.href): CardTypeItem[] | undefined {
+    if (doc.querySelector('.plyr__poster') !== null) {
         // 详情页面保留原有的链接点击拦截，不上报列表数据。
-        document.addEventListener('click', (event) => {
+        doc.addEventListener('click', (event) => {
             if (event.target instanceof Element && event.target.matches('a')) {
                 event.preventDefault();
                 event.stopPropagation();
@@ -16,7 +16,7 @@ export function parseJapaneseAsmr(): CardTypeItem[] | undefined {
     }
 
     const data: CardTypeItem[] = [];
-    const list = document.querySelectorAll('div.entry-preview-wrapper.clearfix');
+    const list = doc.querySelectorAll('div.entry-preview-wrapper.clearfix');
     list.forEach((item) => {
         let cv: CardTypeItem['info'][number]['tag'] = [];
         let rj = '';
@@ -34,16 +34,16 @@ export function parseJapaneseAsmr(): CardTypeItem[] | undefined {
         const link = item.querySelector<HTMLAnchorElement>('.entry-title > a')!;
         data.push({
             key: rj,
-            title: link.textContent.trim(),
+            title: '',
             type: 'item',
             updateDate: dateStr(),
             updateCount: 1,
             cover: item.querySelector('img.lazy')!.getAttribute('data-src')!,
             info: [{
-                url: link.href,
+                url: getHref(link, pageUrl),
                 tag: [
                     ...Array.from(item.querySelectorAll<HTMLAnchorElement>('.post-meta-span.post-meta-span-category a'))
-                        .map((a) => ({ label: a.textContent.trim(), url: relativeUrl(a.href) }))
+                        .map((a) => ({ label: a.textContent.trim(), url: relativeUrl(getHref(a, pageUrl), pageUrl) }))
                         .filter((tag) => !tag.label.includes('SFW') && !tag.label.includes('Requested')),
                     ...cv,
                 ],

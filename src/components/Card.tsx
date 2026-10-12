@@ -9,6 +9,7 @@ interface CardProps {
 }
 
 export const CardUI: React.FC<CardProps> = ({ data, order, imageSrcOverride, onClick }) => {
+    const displayTitle = data.title || data.key;
 
     // 根据类型渲染图片区域
     const renderCover = () => {
@@ -61,8 +62,8 @@ export const CardUI: React.FC<CardProps> = ({ data, order, imageSrcOverride, onC
         >
             {renderCover()}
             <div className="p-2 border-t border-gray-700">
-                <div className="text-sm text-gray-100 font-medium line-clamp-4 leading-snug h-[5rem]" title={data.title}>
-                    {data.title}
+                <div className="text-sm text-gray-100 font-medium line-clamp-4 leading-snug h-[5rem]" title={displayTitle}>
+                    {displayTitle}
                 </div>
                 {renderTags()}
             </div>
