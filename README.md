@@ -13,6 +13,14 @@ bun+vite+react+unocss
 ## 3. 核心数据结构 (Data Structures)
 参考 model.ts
 
+`content.js` 是 Bun 生成的 IIFE 普通脚本，由 manifest 直接加载，源码使用以下结构：
+
+- `src/content/index.ts`：入口，负责 iframe 消息和页面就绪通知。
+- `src/content/utils.ts`：公共工具方法，通过 `import` / `export` 复用。
+- `src/content/sites/japaneseasmr.ts`：Japanese ASMR 站点解析逻辑。
+- `src/content/sites/placeholder.ts`：尚未实现解析的站点使用的占位数据。
+- `src/content/sites/index.ts`：按域名选择解析方法；新增站点模块后在这里注册，并按需补充 manifest 中的域名配置。
+
 ---
 
 ## 4. 关键业务逻辑 (Core Business Logic)

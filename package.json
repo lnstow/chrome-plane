@@ -4,8 +4,11 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite build --watch",
-    "build": "tsc -b && vite build",
+    "dev": "bun run --parallel dev:app dev:content",
+    "dev:app": "vite build --watch",
+    "dev:content": "bun run build:content --watch --no-clear-screen",
+    "build": "tsc -b && vite build && bun run build:content",
+    "build:content": "bun build ./src/content/index.ts --target browser --format iife --outfile ./content.js --banner \"// Generated from src/content/index.ts. Do not edit directly.\"",
     "lint": "eslint .",
     "preview": "vite preview"
   },
